@@ -1,0 +1,15 @@
+# --- Archivos de configuración secretos ---
+.streamlit/secrets.toml
+client_secret.json
+*.json
+
+# --- Basura de Python y Entornos Virtuales ---
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+.env
+
+# --- Archivos del sistema operativo ---
+.DS_Store
