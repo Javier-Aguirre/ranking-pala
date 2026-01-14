@@ -12,7 +12,7 @@ st.set_page_config(page_title="Liga Pala Pro", page_icon="⚾", layout="wide")
 st.title("⚾ Liga Pala - Official Ranking")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
-model = PlackettLuce(mu=25.0, sigma=8.333, beta=8.167, tau=0.083)
+model = PlackettLuce(mu=25.0, sigma=8.333, beta=5.167, tau=0.183)
 
 CATEGORY_PRIORS = {1: 30.0, 2: 27.5, 3: 25.0, 4: 22.5, 5: 20.0}
 
@@ -174,7 +174,7 @@ with tab1: # RANKING (Igual que antes)
         st.info("Sin datos.")
     else:
         st.dataframe(ranking_final, width='stretch', column_config={
-            "ELO": st.column_config.NumberColumn("ELO", format="%d ⚾"),
+            "ELO": st.column_config.NumberColumn("ELO", format="%d"),
             "Win Rate": st.column_config.ProgressColumn(
             "Win Rate", 
                 format="%d%%",   # Muestra "50%" en vez de "0%" o "1%"
