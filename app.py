@@ -195,29 +195,74 @@ with tab2: # GRAFICA (Igual que antes)
         players = st.multiselect("Comparar:", ranking_final['Jugador'].tolist(), default=ranking_final['Jugador'].iloc[0])
         if players:
             st.line_chart(evolution_df[evolution_df['Jugador'].isin(players)], x='Fecha', y='ELO', color='Jugador')
+# --- TAB 3: HISTORIAL (CON BÚSQUEDA Y FILTROS) ---
+with tab3:
+    st.header("Historial de Partidos")
+    if df_partidos.empty:
+        st.info("No hay partidos registrados.")
+    else:
+        # --- ZONA DE FILTROS ---
+        with st.expander("🔍 Buscar y Filtrar", expanded=True):
+            col_f1, col_f2 = st.columns([2, 1])
+            with col_f1:
+                # Multiselect para buscar uno o varios jugadores
+                search_players = st.multiselect("Filtrar por Jugador(es)", list_jugadores_existentes)
+            with col_f2:
+                sort_order = st.radio("Orden", ["Más recientes", "Más antiguos"], horizontal=True)
 
-with tab3: # HISTORIAL (Adaptado a parejas)
-    st.header("Historial")
-    if not df_partidos.empty:
-        # Creamos una vista bonita para la tabla
-        df_view = df_partidos.copy()
+        # --- LÓGICA DE FILTRADO ---
+        df_display = df_partidos.copy()
         
-        # Función para formatear "Pepe" o "Pepe & Juan"
-        def format_team(row, t_prefix):
-            p1 = row[f'{t_prefix}_j1']
-            p2 = row[f'{t_prefix}_j2']
-            if p2: return f"{p1} & {p2}"
-            return f"{p1}"
+        # 1. Filtro por Jugador (Busca en las 4 columnas posibles)
+        if search_players:
+            # Crea una máscara booleana: ¿Está alguno de los buscados en alguna de las 4 columnas?
+            # Usamos isin() columna por columna y las unimos con OR (|)
+            mask = (
+                df_display['t1_j1'].isin(search_players) | 
+                df_display['t1_j2'].isin(search_players) | 
+                df_display['t2_j1'].isin(search_players) | 
+                df_display['t2_j2'].isin(search_players)
+            )
+            df_display = df_display[mask]
+        
+        # 2. Filtro de Orden
+        if sort_order == "Más recientes":
+            df_display = df_display.sort_values(by='fecha', ascending=False)
+        else:
+            df_display = df_display.sort_values(by='fecha', ascending=True)
 
-        df_view['Pareja 1'] = df_view.apply(lambda x: format_team(x, 't1'), axis=1)
-        df_view['Pareja 2'] = df_view.apply(lambda x: format_team(x, 't2'), axis=1)
-        df_view['Resultado'] = df_view.apply(lambda x: f"{int(x['puntos1'])} - {int(x['puntos2'])}", axis=1)
-        
-        st.dataframe(
-            df_view[['fecha', 'Pareja 1', 'Resultado', 'Pareja 2']].sort_values(by='fecha', ascending=False),
-            width='stretch',
-            column_config={"fecha": st.column_config.DateColumn("Fecha", format="DD/MM/YYYY")}
-        )
+        # --- FORMATO VISUAL (Estilo Parejas) ---
+        if not df_display.empty:
+            # Función auxiliar para mostrar "Juan" o "Juan & Pepe"
+            def format_team_str(row, prefix):
+                p1 = row[f'{prefix}_j1']
+                p2 = row[f'{prefix}_j2']
+                # Si p2 tiene algo (no es vacío ni NaN), es pareja
+                if p2 and str(p2).strip(): 
+                    return f"{p1} & {p2}"
+                return f"{p1}"
+
+            df_display['Equipo 1'] = df_display.apply(lambda x: format_team_str(x, 't1'), axis=1)
+            df_display['Equipo 2'] = df_display.apply(lambda x: format_team_str(x, 't2'), axis=1)
+            df_display['Resultado'] = df_display.apply(lambda x: f"{x['puntos1']} - {x['puntos2']}", axis=1)
+            
+            # Mostramos la tabla final limpia
+            st.dataframe(
+                df_display[['fecha', 'Equipo 1', 'Resultado', 'Equipo 2']],
+                width='stretch',
+                column_config={
+                    "fecha": st.column_config.DateColumn("Fecha", format="DD/MM/YYYY"),
+                    "Equipo 1": st.column_config.TextColumn("Equipo 1 (Azul)", help="Jugadores del primer equipo"),
+                    "Equipo 2": st.column_config.TextColumn("Equipo 2 (Rojo)", help="Jugadores del segundo equipo"),
+                    "Resultado": st.column_config.TextColumn("Score", width="small")
+                },
+                hide_index=True
+            )
+            st.caption(f"Mostrando {len(df_display)} partidos.")
+        else:
+            st.warning("No se encontraron partidos con esos criterios.")
+
+
 
 with tab4: # ADMIN (FORMULARIO DINÁMICO)
     st.header("Nuevo Partido")
