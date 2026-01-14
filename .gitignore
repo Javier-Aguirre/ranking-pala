@@ -13,3 +13,4 @@ env/
 
 # --- Archivos del sistema operativo ---
 .DS_Store
+GEMINI.md

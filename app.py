@@ -12,7 +12,7 @@ st.set_page_config(page_title="Liga Pala Pro", page_icon="⚾", layout="wide")
 st.title("⚾ Liga Pala - Official Ranking")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
-model = PlackettLuce(mu=25.0, sigma=8.333, beta=4.167, tau=0.083)
+model = PlackettLuce(mu=25.0, sigma=8.333, beta=8.167, tau=0.083)
 
 CATEGORY_PRIORS = {1: 30.0, 2: 27.5, 3: 25.0, 4: 22.5, 5: 20.0}
 
